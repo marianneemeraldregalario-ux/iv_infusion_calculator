@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IV Infusion Calculator</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f6f8;
+  color: #263746;
+}
+header {
+  background: linear-gradient(120deg,#193750,#16858a);
+  color: white;
+  padding: 25px 18px;
+}
+header h1 { margin: 0 0 6px; }
+header p { margin: 0; opacity: .9; }
+main { max-width: 950px; margin: auto; padding: 20px 15px; }
+.warning {
+  background: #fff3dc;
+  border: 1px solid #ecd49d;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+nav { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 15px; }
+nav button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 13px;
+  background: white;
+  color: #193750;
+  font-weight: bold;
+  cursor: pointer;
+}
+nav button.active { background: #193750; color: white; }
+.panel {
+  display: none;
+  background: white;
+  border-radius: 13px;
+  padding: 20px;
+  box-shadow: 0 3px 12px #19375012;
+}
+.panel.active { display: block; }
+h2 { color: #193750; margin-top: 0; }
+.subtitle { color: #71808c; font-size: 14px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 14px;
+}
+label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; }
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd8df;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.actions { margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
+.primary, .secondary {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.primary { background: #16858a; color: white; }
+.secondary { background: #eaf0f3; color: #193750; }
+.result {
+  background: #eaf5f4;
+  border: 1px solid #c6e2df;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 17px;
+  min-height: 65px;
+}
+.result strong { color: #193750; }
+.answer { color: #16858a; font-size: 25px; font-weight: bold; margin-top: 5px; }
+.formula { font-size: 13px; color: #62727d; margin-top: 7px; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+th, td { padding: 10px; text-align: left; border-bottom: 1px solid #dce5e9; }
+th { background: #edf3f5; color: #193750; }
+.note { color: #71808c; font-size: 12px; margin-top: 12px; }
+@media(max-width:600px) {
+  .grid { grid-template-columns: 1fr; }
+  .panel { padding: 15px; }
+  nav button { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>IV Infusion Calculator</h1>
+  <p>Pharmacy Student Calculation and Monitoring Tool</p>
+</header>
+
+<main>
+
+<div class="warning">
+<b>Educational prototype only.</b> This calculator is not for clinical decision-making or controlling an infusion device. Verify all calculations, prescriptions, units, tubing factors, and device settings with qualified healthcare professionals and institutional protocols.
+</div>
+
+<nav>
+<button class="active" onclick="openTab('flow',this)">Flow Rate</button>
+<button onclick="openTab('drops',this)">Gravity Drop</button>
+<button onclick="openTab('duration',this)">Duration</button>
+<button onclick="openTab('monitor',this)">IV Monitoring</button>
+<button onclick="openTab('lines',this)">Multiple Lines</button>
+<button onclick="openTab('history',this)">History</button>
+</nav>
+
+<!-- FLOW RATE -->
+<section id="flow" class="panel active">
+<h2>Flow Rate Calculator</h2>
+<p class="subtitle">Calculate the infusion rate in mL/hr.</p>
+<div class="grid">
+<div>
+<label>Total Volume (mL)</label>
+<input id="volume" type="number" min="0" placeholder="Example: 1000">
+</div>
+<div>
+<label>Infusion Time (hours)</label>
+<input id="time" type="number" min="0" placeholder="Example: 8">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="flowCalc()">Calculate</button>
+<button class="secondary" onclick="clearBox('flowResult')">Clear</button>
+</div>
+<div id="flowResult" class="result">Your result will appear here.</div>
+</section>
+
+<!-- GRAVITY DROP -->
+<section id="drops" class="panel">
+<h2>Gravity Drop Calculator</h2>
+<p class="subtitle">Calculate the required drops per minute.</p>
+<div class="grid">
+<div>
+<label>Total Volume (mL)</label>
+<input id="dropVolume" type="number" min="0" placeholder="Example: 500">
+</div>
+<div>
+<label>Infusion Time (minutes)</label>
+<input id="dropTime" type="number" min="0" placeholder="Example: 240">
+</div>
+<div>
+<label>Drop Factor (gtt/mL)</label>
+<select id="factor">
+<option value="10">10 gtt/mL</option>
+<option value="15">15 gtt/mL</option>
+<option value="20" selected>20 gtt/mL</option>
+<option value="60">60 gtt/mL</option>
+</select>
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="dropCalc()">Calculate</button>
+<button class="secondary" onclick="clearBox('dropResult')">Clear</button>
+</div>
+<div id="dropResult" class="result">Your result will appear here.</div>
+</section>
+
+<!-- DURATION -->
+<section id="duration" class="panel">
+<h2>Infusion Duration</h2>
+<p class="subtitle">Determine how long an infusion will take.</p>
+<div class="grid">
+<div>
+<label>Total Volume (mL)</label>
+<input id="durationVolume" type="number" min="0" placeholder="Example: 1000">
+</div>
+<div>
+<label>Flow Rate (mL/hr)</label>
+<input id="durationRate" type="number" min="0" placeholder="Example: 125">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="durationCalc()">Calculate</button>
+<button class="secondary" onclick="clearBox('durationResult')">Clear</button>
+</div>
+<div id="durationResult" class="result">Your result will appear here.</div>
+</section>
+
+<!-- MONITORING -->
+<section id="monitor" class="panel">
+<h2>IV Monitoring Estimator</h2>
+<p class="subtitle">Estimate the remaining volume and infusion time.</p>
+<div class="grid">
+<div>
+<label>Starting Volume (mL)</label>
+<input id="startVolume" type="number" min="0" placeholder="Example: 1000">
+</div>
+<div>
+<label>Flow Rate (mL/hr)</label>
+<input id="monitorRate" type="number" min="0" placeholder="Example: 100">
+</div>
+<div>
+<label>Elapsed Time (hours)</label>
+<input id="elapsed" type="number" min="0" placeholder="Example: 3">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="monitorCalc()">Estimate</button>
+<button class="secondary" onclick="clearBox('monitorResult')">Clear</button>
+</div>
+<div id="monitorResult" class="result">Your result will appear here.</div>
+<p class="note">Assumes a constant flow rate without interruptions or rate changes. Actual remaining volume must be checked against the IV container.</p>
+</section>
+
+<!-- MULTIPLE LINES -->
+<section id="lines" class="panel">
+<h2>Multiple IV Line Tracker</h2>
+<p class="subtitle">Organize multiple lines for a classroom demonstration. Do not enter patient-identifying information.</p>
+<div class="grid">
+<div>
+<label>Line Label</label>
+<input id="lineName" placeholder="Example: Line A">
+</div>
+<div>
+<label>Solution Label</label>
+<input id="solution" placeholder="Example: Example solution">
+</div>
+<div>
+<label>Volume (mL)</label>
+<input id="lineVolume" type="number" min="0">
+</div>
+<div>
+<label>Rate (mL/hr)</label>
+<input id="lineRate" type="number" min="0">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="addLine()">Add IV Line</button>
+<button class="secondary" onclick="clearLines()">Clear Tracker</button>
+</div>
+<div id="lineTable"></div>
+</section>
+
+<!-- HISTORY -->
+<section id="history" class="panel">
+<h2>Calculation History</h2>
+<p class="subtitle">Review calculations performed during this browser session.</p>
+<button class="secondary" onclick="clearHistory()">Clear History</button>
+<div id="historyTable">No calculations yet.</div>
+</section>
+
+</main>
+
+<script>
+let historyData = [];
+let lines = [];
+
+function openTab(id,button) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  button.classList.add('active');
+}
+
+function number(id) {
+  return Number(document.getElementById(id).value);
+}
+
+function check(ids,allowZero=false) {
+  for (let id of ids) {
+    let el=document.getElementById(id);
+    let n=Number(el.value);
+    if(el.value.trim()==='' || !Number.isFinite(n) || (allowZero ? n<0 : n<=0)) {
+      alert('Please enter valid values in all required fields.');
+      el.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+function showResult(id,title,value,formula) {
+  document.getElementById(id).innerHTML =
+    '<strong>'+title+'</strong><div class="answer">'+value+
+    '</div><div class="formula">'+formula+'</div>';
+  historyData.unshift({title,value,formula});
+  renderHistory();
+}
+
+function clearBox(id) {
+  document.getElementById(id).textContent='Your result will appear here.';
+}
+
+function flowCalc() {
+  if(!check(['volume','time'])) return;
+  let v=number('volume'),t=number('time'),r=v/t;
+  showResult('flowResult','Calculated Flow Rate',r.toFixed(2)+' mL/hr',
+    v+' mL ÷ '+t+' hr = '+r.toFixed(2)+' mL/hr');
+}
+
+function dropCalc() {
+  if(!check(['dropVolume','dropTime'])) return;
+  let v=number('dropVolume'),t=number('dropTime'),f=number('factor');
+  let r=(v*f)/t;
+  showResult('dropResult','Calculated Drop Rate',Math.round(r)+' gtt/min',
+    '('+v+' × '+f+') ÷ '+t+' = '+r.toFixed(2)+' gtt/min; rounded to a whole drop');
+}
+
+function durationCalc() {
+  if(!check(['durationVolume','durationRate'])) return;
+  let v=number('durationVolume'),r=number('durationRate');
+  let total=v/r;
+  let h=Math.floor(total),m=Math.round((total-h)*60);
+  if(m===60){h++;m=0;}
+  showResult('durationResult','Estimated Duration',h+' hr '+m+' min',
+    v+' mL ÷ '+r+' mL/hr = '+total.toFixed(2)+' hr');
+}
+
+function monitorCalc() {
+  if(!check(['startVolume','monitorRate']) || !check(['elapsed'],true)) return;
+  let v=number('startVolume'),r=number('monitorRate'),e=number('elapsed');
+  let used=r*e;
+  let remaining=Math.max(0,v-used);
+  let timeLeft=remaining/r;
+  let h=Math.floor(timeLeft),m=Math.round((timeLeft-h)*60);
+  if(m===60){h++;m=0;}
+  showResult('monitorResult','Estimated Remaining Volume',
+    remaining.toFixed(1)+' mL',
+    'Estimated volume infused: '+Math.min(v,used).toFixed(1)+' mL. Time remaining: '+h+' hr '+m+' min.');
+}
+
+function addLine() {
+  let name=document.getElementById('lineName').value.trim();
+  let solution=document.getElementById('solution').value.trim();
+  let v=number('lineVolume'),r=number('lineRate');
+  if(!name || !solution || !check(['lineVolume','lineRate'])) {
+    if(!name || !solution) alert('Please enter a line label and solution label.');
+    return;
+  }
+  lines.push({name,solution,v,r});
+  ['lineName','solution','lineVolume','lineRate'].forEach(id=>document.getElementById(id).value='');
+  renderLines();
+}
+
+function renderLines() {
+  let el=document.getElementById('lineTable');
+  if(!lines.length){el.innerHTML='No IV lines added.';return;}
+  el.innerHTML='<table><tr><th>Line</th><th>Solution</th><th>Volume</th><th>Rate</th><th>Duration</th></tr>'+
+    lines.map(x=>'<tr><td>'+safe(x.name)+'</td><td>'+safe(x.solution)+'</td><td>'+x.v+' mL</td><td>'+x.r+' mL/hr</td><td>'+(x.v/x.r).toFixed(2)+' hr</td></tr>').join('')+'</table>';
+}
+
+function clearLines() {
+  lines=[];
+  renderLines();
+}
+
+function renderHistory() {
+  let el=document.getElementById('historyTable');
+  if(!historyData.length){el.textContent='No calculations yet.';return;}
+  el.innerHTML='<table><tr><th>Calculation</th><th>Result</th><th>Formula</th></tr>'+
+    historyData.map(x=>'<tr><td>'+safe(x.title)+'</td><td>'+safe(x.value)+'</td><td>'+safe(x.formula)+'</td></tr>').join('')+'</table>';
+}
+
+function clearHistory() {
+  historyData=[];
+  renderHistory();
+}
+
+function safe(value) {
+  return String(value).replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+renderLines();
+</script>
+</body>
+</html>
